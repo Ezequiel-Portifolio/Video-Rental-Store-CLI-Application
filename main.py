@@ -55,8 +55,21 @@ def MenuPrincipal(): #Abre o menu de opções
   print ("0 - Sair")
   print ("1 - Cadastrar Filme")
   print ("2 - Carregar Filme")
-  opcao = input("Digite a opção desejada: ")
-  OpcoesMenu(int(opcao))
+
+  try: #Tenta pegar a opção do usuário
+    opcao = int(input("Digite a opção desejada: "))
+    if opcao not in [0, 1, 2]: #Se a opção não for 0, 1 ou 2, mostra uma mensagem de erro
+        print("Opção inválida!")
+        time.sleep(1)
+        limpar_console()
+        MenuPrincipal()
+    else: #Se a opção for 0, 1 ou 2, chama a função OpcoesMenu()
+        OpcoesMenu(opcao)
+  except ValueError: #Se o usuário digitar algo que não seja um número, mostra uma mensagem de erro
+    print("Por favor, digite um número!")
+    time.sleep(1)
+    limpar_console()
+    MenuPrincipal()
   
 if __name__ == "__main__": #Verifica se é o script principal; se for, roda a função MenuPrincipal()
     MenuPrincipal()

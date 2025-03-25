@@ -33,7 +33,7 @@ def OpcoesMenu(ValorOpcao):
     MenuPrincipal()
     
   elif ValorOpcao == 2: #Se a opção for 2, mostra os filmes cadastrados
-    try:
+    if database.filmes_cadastrados:
      for filme in database.filmes_cadastrados:
       print ("ID do filme:", filme)
       print ("Nome do filme:", database.filmes_cadastrados[filme]["Nome"])
@@ -41,7 +41,7 @@ def OpcoesMenu(ValorOpcao):
       print ("Gênero do filme:", database.filmes_cadastrados[filme]["Genero"])
       print ("Disponibilidade do filme:", database.filmes_cadastrados[filme]["Disponibilidade"])
       print ("-----------------------------")
-    except:
+    else:
       print ("Não há filmes cadastrados.")
     continuar = input("Aperte qualquer tecla para sair")
     print ("Carregando...")

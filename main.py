@@ -14,7 +14,20 @@ def SalvarFilmes():
   time.sleep(1)
   limpar_console()
   MenuPrincipal()
-  
+
+def RemoverFilmes():
+  id_filme = input("Digite o ID do filme que deseja remover: ")
+  if id_filme in database.filmes_cadastrados:
+    del database.filmes_cadastrados[id_filme]
+    print ("Filme removido com sucesso!")
+  else:
+    print ("Filme não encontrado.")
+  continuar = input("Aperte qualquer tecla para sair")
+  print ("Carregando...")
+  time.sleep(1)
+  limpar_console()
+  MenuPrincipal()
+
 def CarregarFilmes():
   database.carregar_arquivoFilmes()
   entrada = input("Pressione qualquer tecla para continuar")
@@ -65,6 +78,9 @@ def OpcoesMenu(ValorOpcao):
     limpar_console()
     MenuPrincipal()
 
+  elif ValorOpcao == 3: #Se a opção for 3, chama a função RemoverFilmes()
+    RemoverFilmes()
+    
   elif ValorOpcao == 4: #Se 4, salva os filmes cadastrados em um arquivo JSON
     SalvarFilmes()
   

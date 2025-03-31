@@ -9,6 +9,7 @@ The program relies on a database.py script responsible for storing movie data. T
 * Load registered movies: loads all data used in registration
 * Save and load movies data in a JSON file
 * Delete movies from database
+* Change the language of the program with english and portuguese (option 6)
 
 # Descrição em Português
 O programa conta com um script database.py responsável por armazenar os dados dos filmes. O main.py é responsável por fornecer as seguintes funções ao usuário:
@@ -18,3 +19,4 @@ O programa conta com um script database.py responsável por armazenar os dados d
 * Carregar os filmes cadastrados: carrega todos os dados utilizados no cadastro
 * Salvar e carregar filmes em arquivo JSON
 * Deletar filmes da base de dados
+* Mudar o idioma do programa entre inglês e português

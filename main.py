@@ -6,7 +6,7 @@ import time
 import languages as lang
 
 def limpar_console():
-    os.system('cls' if os.name == 'nt' else 'clear') #Limpa o console
+     print("\033[H\033[J", end="") #Limpa o console
 
 def MudarIdioma():
     print(lang.get_string("select_language"))

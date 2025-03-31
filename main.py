@@ -1,4 +1,3 @@
-import os
 import json
 import database
 import sys
@@ -7,6 +6,7 @@ import languages as lang
 
 def limpar_console():
      print("\033[H\033[J", end="") #Limpa o console
+
 
 def MudarIdioma():
     print(lang.get_string("select_language"))
@@ -22,6 +22,10 @@ def MudarIdioma():
     
     time.sleep(1)
     limpar_console()
+    MenuPrincipal()
+
+def PrimeiroMenu():
+    MudarIdioma()
     MenuPrincipal()
 
 def SalvarFilmes():
@@ -135,4 +139,4 @@ def MenuPrincipal(): #Abre o menu de opções
         MenuPrincipal()
   
 if __name__ == "__main__": #Verifica se é o script principal; se for, roda a função MenuPrincipal()
-    MenuPrincipal()
+    PrimeiroMenu()

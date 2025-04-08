@@ -1,4 +1,25 @@
 # Sistema de multilinguagem para a aplicação de locadora de vídeo
+"""
+Languages Module
+---------------
+
+This module implements the multilanguage system for the Video Rental Store application.
+It contains dictionaries for each supported language (currently Portuguese and English),
+and functions to manage text retrieval and language switching.
+
+How it works:
+1. Each language has a dictionary with keys representing text identifiers
+2. The current_language variable points to the active language dictionary
+3. The get_string() function retrieves text based on keys from the current language
+4. The set_language() function allows changing the active language
+
+To add a new language:
+1. Create a new dictionary (e.g., es_ES for Spanish)
+2. Copy all keys from an existing language dictionary
+3. Translate all the values to the new language
+4. Update the set_language() function to handle the new language option
+5. Update the language selection menu in the main application
+"""
 
 # Dicionário para português
 pt_BR = {
@@ -107,8 +128,25 @@ current_language = pt_BR
 
 def get_string(key, *args):
     """
-    Retorna uma string no idioma atual para a chave especificada.
-    Se args for fornecido, eles são usados para formatar a string.
+    Retrieves a string in the current language for the specified key.
+    
+    Parameters:
+    -----------
+    key : str
+        The identifier for the text to be retrieved
+    *args : tuple
+        Optional arguments to format the string using str.format()
+    
+    Returns:
+    --------
+    str
+        The translated text string, formatted with args if provided
+        Returns "[Missing text: {key}]" if the key is not found
+    
+    Example:
+    --------
+    get_string("welcome") -> "Seja bem-vindo ao Sistema de Locadora de Vídeo."
+    get_string("movies_loaded", 5) -> "5 filmes carregados com sucesso."
     """
     try:
         text = current_language[key]
@@ -120,8 +158,22 @@ def get_string(key, *args):
 
 def set_language(language_code):
     """
-    Define o idioma atual.
-    language_code: 1 para português, 2 para inglês
+    Sets the current active language.
+    
+    Parameters:
+    -----------
+    language_code : int
+        1 for Portuguese, 2 for English
+    
+    Returns:
+    --------
+    str
+        Confirmation message in the newly set language
+    
+    Example:
+    --------
+    set_language(1) -> "Idioma alterado para Português"
+    set_language(2) -> "Language changed to English"
     """
     global current_language
     

@@ -1,3 +1,21 @@
+"""
+Main Module - Video Rental Store CLI Application
+------------------------------------------------
+
+Este módulo contém a interface principal da aplicação de Locadora de Vídeos.
+Ele gerencia o menu principal e coordena as interações com os outros módulos.
+
+Funcionalidades:
+- Menu interativo para gerenciamento de filmes
+- Registro, listagem e remoção de filmes
+- Operações de persistência de dados (salvar/carregar)
+- Troca de idioma entre Português e Inglês
+
+Módulos Dependentes:
+- database: Gerencia o armazenamento e persistência dos filmes
+- languages: Fornece suporte a múltiplos idiomas
+"""
+
 import json
 import database
 import sys
@@ -5,10 +23,18 @@ import time
 import languages as lang
 
 def limpar_console():
-     print("\033[H\033[J", end="") #Limpa o console
+    """
+    Limpa a tela do console para melhor visualização do menu.
+    Usa sequências de escape ANSI que são compatíveis com a maioria dos terminais.
+    """
+    print("\033[H\033[J", end="") #Limpa o console
 
 
 def MudarIdioma():
+    """
+    Exibe menu para seleção de idioma e atualiza o idioma do sistema.
+    Após a troca, retorna ao menu principal com o novo idioma aplicado.
+    """
     print(lang.get_string("select_language"))
     try:
         opcao = int(input())
@@ -25,10 +51,18 @@ def MudarIdioma():
     MenuPrincipal()
 
 def PrimeiroMenu():
+    """
+    Função inicial que é chamada quando o programa começa.
+    Primeiro solicita a seleção do idioma antes de mostrar o menu principal.
+    """
     MudarIdioma()
     MenuPrincipal()
 
 def SalvarFilmes():
+    """
+    Salva a lista atual de filmes em um arquivo JSON.
+    Utiliza a função do módulo database para persistir os dados.
+    """
     database.salvar_arquivoFilmes()
     entrada = input(lang.get_string("press_continue"))
     print(lang.get_string("loading"))
@@ -37,6 +71,10 @@ def SalvarFilmes():
     MenuPrincipal()
 
 def RemoverFilmes():
+    """
+    Remove um filme do catálogo com base no ID fornecido pelo usuário.
+    Exibe mensagem de confirmação ou erro se o filme não for encontrado.
+    """
     id_filme = input(lang.get_string("enter_remove_id"))
     if id_filme in database.filmes_cadastrados:
         del database.filmes_cadastrados[id_filme]
@@ -50,6 +88,10 @@ def RemoverFilmes():
     MenuPrincipal()
 
 def CarregarFilmes():
+    """
+    Carrega a lista de filmes de um arquivo JSON.
+    Utiliza a função do módulo database para ler os dados salvos anteriormente.
+    """
     database.carregar_arquivoFilmes()
     entrada = input(lang.get_string("press_continue"))
     print(lang.get_string("loading"))
@@ -58,6 +100,24 @@ def CarregarFilmes():
     MenuPrincipal()
 
 def OpcoesMenu(ValorOpcao):
+    """
+    Processa a opção selecionada pelo usuário no menu principal.
+    
+    Parâmetros:
+    -----------
+    ValorOpcao : int
+        O número da opção selecionada pelo usuário
+        
+    Opções:
+    -------
+    0: Sair do programa
+    1: Cadastrar novo filme
+    2: Listar filmes cadastrados
+    3: Remover filme existente
+    4: Salvar lista de filmes em JSON
+    5: Carregar lista de filmes de JSON
+    6: Alterar idioma do sistema
+    """
     if ValorOpcao == 0: #Se a opção for 0, fecha o console
         print(lang.get_string("exiting"))
         time.sleep(1)
@@ -111,7 +171,12 @@ def OpcoesMenu(ValorOpcao):
     elif ValorOpcao == 6: #Se 6, altera o idioma
         MudarIdioma()
     
-def MenuPrincipal(): #Abre o menu de opções
+def MenuPrincipal():
+    """
+    Exibe o menu principal da aplicação e processa a entrada do usuário.
+    O menu é exibido no idioma atual configurado no sistema.
+    Captura a entrada do usuário e valida se é uma opção válida antes de processá-la.
+    """
     print("-----------------------------")
     print(lang.get_string("welcome"))
     print("0 -", lang.get_string("exit"))
@@ -138,5 +203,10 @@ def MenuPrincipal(): #Abre o menu de opções
         limpar_console()
         MenuPrincipal()
   
-if __name__ == "__main__": #Verifica se é o script principal; se for, roda a função MenuPrincipal()
+if __name__ == "__main__":
+    """
+    Ponto de entrada principal do programa.
+    Inicia a aplicação chamando a função PrimeiroMenu que configura o idioma
+    antes de exibir o menu principal.
+    """
     PrimeiroMenu()

@@ -21,6 +21,66 @@ import database
 import sys
 import time
 import languages as lang
+import validation
+
+def confirmar_acao(mensagem):
+    """
+    Solicita confirmação do usuário para ações destrutivas.
+    
+    Parâmetros:
+    -----------
+    mensagem : str
+        Mensagem de confirmação a ser exibida
+        
+    Retorna:
+    --------
+    bool
+        True se o usuário confirmar, False caso contrário
+    """
+    print(mensagem)
+    resposta = input(lang.get_string("confirm_action")).lower().strip()
+    return resposta in ['sim', 's', 'yes', 'y']
+
+
+def obter_input_validado(prompt, validator_func, *validator_args):
+    """
+    Obtém input do usuário com validação.
+    
+    Parâmetros:
+    -----------
+    prompt : str
+        Mensagem para solicitar input
+    validator_func : function
+        Função de validação a ser chamada
+    *validator_args : tuple
+        Argumentos adicionais para a função de validação
+        
+    Retorna:
+    --------
+    tuple
+        Resultado da validação ou None se cancelado
+    """
+    max_attempts = 3
+    attempts = 0
+    
+    while attempts < max_attempts:
+        user_input = input(prompt)
+        
+        # Allow user to cancel with empty input on second attempt
+        if attempts > 0 and not user_input.strip():
+            if confirmar_acao(lang.get_string("cancel_operation")):
+                return None
+        
+        result = validator_func(user_input, *validator_args)
+        if result[0]:  # is_valid
+            return result
+        else:
+            print(f"Erro: {result[-1]}")  # error_message
+            attempts += 1
+    
+    print(lang.get_string("max_attempts_reached"))
+    return None
+
 
 def limpar_console():
     """
@@ -30,35 +90,37 @@ def limpar_console():
     print("\033[H\033[J", end="") #Limpa o console
 
 
-def MudarIdioma():
+def mudar_idioma():
     """
     Exibe menu para seleção de idioma e atualiza o idioma do sistema.
     Após a troca, retorna ao menu principal com o novo idioma aplicado.
     """
     print(lang.get_string("select_language"))
-    try:
-        opcao = int(input())
-        if opcao in [1, 2]:
-            message = lang.set_language(opcao)
-            print(message)
-        else:
-            print(lang.get_string("invalid_option"))
-    except ValueError:
-        print(lang.get_string("enter_number"))
+    
+    # Use validated input for language selection
+    result = obter_input_validado("", validation.validate_option_input, [1, 2])
+    if result is None:
+        menu_principal()
+        return
+    
+    opcao = result[1]  # Get the validated option
+    message = lang.set_language(opcao)
+    print(message)
     
     time.sleep(1)
     limpar_console()
-    MenuPrincipal()
+    menu_principal()
 
-def PrimeiroMenu():
+def primeiro_menu():
     """
     Função inicial que é chamada quando o programa começa.
     Primeiro solicita a seleção do idioma antes de mostrar o menu principal.
     """
-    MudarIdioma()
-    MenuPrincipal()
+    mudar_idioma()
+    menu_principal()
 
-def SalvarFilmes():
+
+def salvar_filmes():
     """
     Salva a lista atual de filmes em um arquivo JSON.
     Utiliza a função do módulo database para persistir os dados.
@@ -68,26 +130,62 @@ def SalvarFilmes():
     print(lang.get_string("loading"))
     time.sleep(1)
     limpar_console()
-    MenuPrincipal()
+    menu_principal()
 
-def RemoverFilmes():
+
+def remover_filmes():
     """
     Remove um filme do catálogo com base no ID fornecido pelo usuário.
     Exibe mensagem de confirmação ou erro se o filme não for encontrado.
     """
-    id_filme = input(lang.get_string("enter_remove_id"))
+    if not database.filmes_cadastrados:
+        print(lang.get_string("no_movies"))
+        continuar = input(lang.get_string("press_exit"))
+        print(lang.get_string("loading"))
+        time.sleep(1)
+        limpar_console()
+        menu_principal()
+        return
+    
+    # Show available movies
+    print(lang.get_string("available_movies"))
+    for filme_id in database.filmes_cadastrados.keys():
+        print(f"- {filme_id}: {database.filmes_cadastrados[filme_id]['Nome']}")
+    print()
+    
+    # Get movie ID with validation
+    result = obter_input_validado(
+        lang.get_string("enter_remove_id"),
+        validation.validate_non_empty,
+        "ID do filme"
+    )
+    
+    if result is None:
+        limpar_console()
+        menu_principal()
+        return
+    
+    id_filme = result[1]  # Get sanitized ID
+    
     if id_filme in database.filmes_cadastrados:
-        del database.filmes_cadastrados[id_filme]
-        print(lang.get_string("movie_removed"))
+        # Ask for confirmation before removing
+        movie_name = database.filmes_cadastrados[id_filme]["Nome"]
+        if confirmar_acao(f"Tem certeza que deseja remover o filme '{movie_name}' (ID: {id_filme})?"):
+            del database.filmes_cadastrados[id_filme]
+            print(lang.get_string("movie_removed"))
+        else:
+            print("Operação cancelada.")
     else:
         print(lang.get_string("movie_not_found"))
+    
     continuar = input(lang.get_string("press_exit"))
     print(lang.get_string("loading"))
     time.sleep(1)
     limpar_console()
-    MenuPrincipal()
+    menu_principal()
 
-def CarregarFilmes():
+
+def carregar_filmes():
     """
     Carrega a lista de filmes de um arquivo JSON.
     Utiliza a função do módulo database para ler os dados salvos anteriormente.
@@ -97,15 +195,15 @@ def CarregarFilmes():
     print(lang.get_string("loading"))
     time.sleep(1)
     limpar_console()
-    MenuPrincipal()
+    menu_principal()
 
-def OpcoesMenu(ValorOpcao):
+def opcoes_menu(valor_opcao):
     """
     Processa a opção selecionada pelo usuário no menu principal.
     
     Parâmetros:
     -----------
-    ValorOpcao : int
+    valor_opcao : int
         O número da opção selecionada pelo usuário
         
     Opções:
@@ -118,60 +216,148 @@ def OpcoesMenu(ValorOpcao):
     5: Carregar lista de filmes de JSON
     6: Alterar idioma do sistema
     """
-    if ValorOpcao == 0: #Se a opção for 0, fecha o console
+    if valor_opcao == 0:  # Se a opção for 0, fecha o console
         print(lang.get_string("exiting"))
         time.sleep(1)
         sys.exit()
   
-    elif ValorOpcao == 1:  #Se a opção for 1, pega as entradas para definir os dados do filme
-        id_filme = input(lang.get_string("define_id"))
-        Nome = input(lang.get_string("enter_name"))
-        Ano = input(lang.get_string("enter_year"))
-        Genero = input(lang.get_string("enter_genre"))
-        Disponibilidade = input(lang.get_string("enter_availability"))
-        database.filmes_cadastrados[id_filme] = {
-            "Nome": Nome,
-            "Ano": Ano,
-            "Genero": Genero,
-            "Disponibilidade": Disponibilidade
-        }
-        print(lang.get_string("movie_registered"))
-        continuar = input(lang.get_string("press_exit"))
-        print(lang.get_string("loading"))
-        time.sleep(1)
-        limpar_console()
-        MenuPrincipal()
+    elif valor_opcao == 1:  # Se a opção for 1, cadastra novo filme
+        cadastrar_filme()
     
-    elif ValorOpcao == 2: #Se a opção for 2, mostra os filmes cadastrados
-        if database.filmes_cadastrados: #Se houver filmes cadastrados, mostra os filmes
-            for filme in database.filmes_cadastrados:
-                print(lang.get_string("movie_id"), filme)
-                print(lang.get_string("movie_name"), database.filmes_cadastrados[filme]["Nome"])
-                print(lang.get_string("movie_year"), database.filmes_cadastrados[filme]["Ano"])
-                print(lang.get_string("movie_genre"), database.filmes_cadastrados[filme]["Genero"])
-                print(lang.get_string("movie_availability"), database.filmes_cadastrados[filme]["Disponibilidade"])
-                print("-----------------------------")
-        else: #Se não houver filmes cadastrados, mostra uma mensagem de erro
-            print(lang.get_string("no_movies"))
-        continuar = input(lang.get_string("press_exit"))
-        print(lang.get_string("loading"))
-        time.sleep(1)
-        limpar_console()
-        MenuPrincipal()
+    elif valor_opcao == 2:  # Se a opção for 2, mostra os filmes cadastrados
+        listar_filmes()
 
-    elif ValorOpcao == 3: #Se a opção for 3, chama a função RemoverFilmes()
-        RemoverFilmes()
+    elif valor_opcao == 3:  # Se a opção for 3, chama a função remover_filmes()
+        remover_filmes()
     
-    elif ValorOpcao == 4: #Se 4, salva os filmes cadastrados em um arquivo JSON
-        SalvarFilmes()
+    elif valor_opcao == 4:  # Se 4, salva os filmes cadastrados em um arquivo JSON
+        salvar_filmes()
   
-    elif ValorOpcao == 5: #Se 5, carrega os filmes cadastrados de um arquivo JSON
-        CarregarFilmes()
+    elif valor_opcao == 5:  # Se 5, carrega os filmes cadastrados de um arquivo JSON
+        carregar_filmes()
         
-    elif ValorOpcao == 6: #Se 6, altera o idioma
-        MudarIdioma()
+    elif valor_opcao == 6:  # Se 6, altera o idioma
+        mudar_idioma()
+
+
+def cadastrar_filme():
+    """
+    Cadastra um novo filme com validação de dados.
+    """
+    print(lang.get_string("register_movie"))
+    print("=" * 40)
     
-def MenuPrincipal():
+    # Validate movie ID
+    id_result = obter_input_validado(
+        lang.get_string("define_id"),
+        validation.validate_movie_id,
+        database.filmes_cadastrados
+    )
+    if id_result is None:
+        limpar_console()
+        menu_principal()
+        return
+    id_filme = id_result[1]
+    
+    # Validate movie name
+    name_result = obter_input_validado(
+        lang.get_string("enter_name"),
+        validation.validate_non_empty,
+        "Nome do filme"
+    )
+    if name_result is None:
+        limpar_console()
+        menu_principal()
+        return
+    nome = name_result[1]
+    
+    # Validate movie year
+    year_result = obter_input_validado(
+        lang.get_string("enter_year"),
+        validation.validate_year
+    )
+    if year_result is None:
+        limpar_console()
+        menu_principal()
+        return
+    ano = year_result[1]
+    
+    # Validate movie genre
+    genre_result = obter_input_validado(
+        lang.get_string("enter_genre"),
+        validation.validate_non_empty,
+        "Gênero do filme"
+    )
+    if genre_result is None:
+        limpar_console()
+        menu_principal()
+        return
+    genero = genre_result[1]
+    
+    # Validate availability
+    availability_result = obter_input_validado(
+        lang.get_string("enter_availability"),
+        validation.validate_availability
+    )
+    if availability_result is None:
+        limpar_console()
+        menu_principal()
+        return
+    disponibilidade_bool = availability_result[1]
+    disponibilidade_display = availability_result[2]
+    
+    # Create movie entry
+    database.filmes_cadastrados[id_filme] = {
+        "Nome": nome,
+        "Ano": ano,
+        "Genero": genero,
+        "Disponibilidade": disponibilidade_bool
+    }
+    
+    print(lang.get_string("movie_registered"))
+    disponibilidade_display = lang.get_string("available") if disponibilidade_bool else lang.get_string("unavailable")
+    print(f"ID: {id_filme} | Nome: {nome} | Ano: {ano} | Gênero: {genero} | Disponibilidade: {disponibilidade_display}")
+    
+    continuar = input(lang.get_string("press_exit"))
+    print(lang.get_string("loading"))
+    time.sleep(1)
+    limpar_console()
+    menu_principal()
+
+
+def listar_filmes():
+    """
+    Lista todos os filmes cadastrados em formato melhorado.
+    """
+    if database.filmes_cadastrados:  # Se houver filmes cadastrados, mostra os filmes
+        print(lang.get_string("list_movies"))
+        print("=" * 70)
+        
+        for filme_id in database.filmes_cadastrados:
+            filme = database.filmes_cadastrados[filme_id]
+            # Display availability in the current language
+            if isinstance(filme["Disponibilidade"], bool):
+                disponibilidade_display = lang.get_string("available") if filme["Disponibilidade"] else lang.get_string("unavailable")
+            else:
+                # Handle legacy string format
+                disponibilidade_display = filme["Disponibilidade"]
+            
+            print(f"{lang.get_string('movie_id')} {filme_id}")
+            print(f"{lang.get_string('movie_name')} {filme['Nome']}")
+            print(f"{lang.get_string('movie_year')} {filme['Ano']}")
+            print(f"{lang.get_string('movie_genre')} {filme['Genero']}")
+            print(f"{lang.get_string('movie_availability')} {disponibilidade_display}")
+            print("-" * 70)
+    else:  # Se não houver filmes cadastrados, mostra uma mensagem de erro
+        print(lang.get_string("no_movies"))
+    
+    continuar = input(lang.get_string("press_exit"))
+    print(lang.get_string("loading"))
+    time.sleep(1)
+    limpar_console()
+    menu_principal()
+    
+def menu_principal():
     """
     Exibe o menu principal da aplicação e processa a entrada do usuário.
     O menu é exibido no idioma atual configurado no sistema.
@@ -188,25 +374,25 @@ def MenuPrincipal():
     print("6 -", lang.get_string("change_language"))
     print("-----------------------------")
 
-    try: #Tenta pegar a opção do usuário
-        opcao = int(input(lang.get_string("select_option")))
-        if opcao not in [0, 1, 2, 3, 4, 5, 6]: #Verifica se a opção é válida
-            print(lang.get_string("invalid_option"))
-            time.sleep(1)
-            limpar_console()
-            MenuPrincipal()
-        else: #Se a opção for válida, chama a função OpcoesMenu()
-            OpcoesMenu(opcao)
-    except ValueError: #Se o usuário digitar algo que não seja um número, mostra uma mensagem de erro
-        print(lang.get_string("enter_number"))
-        time.sleep(1)
+    # Use validated input for menu selection
+    result = obter_input_validado(
+        lang.get_string("select_option"),
+        validation.validate_option_input,
+        [0, 1, 2, 3, 4, 5, 6]
+    )
+    
+    if result is None:
         limpar_console()
-        MenuPrincipal()
+        menu_principal()
+        return
+    
+    opcao = result[1]  # Get the validated option
+    opcoes_menu(opcao)
   
 if __name__ == "__main__":
     """
     Ponto de entrada principal do programa.
-    Inicia a aplicação chamando a função PrimeiroMenu que configura o idioma
+    Inicia a aplicação chamando a função primeiro_menu que configura o idioma
     antes de exibir o menu principal.
     """
-    PrimeiroMenu()
+    primeiro_menu()

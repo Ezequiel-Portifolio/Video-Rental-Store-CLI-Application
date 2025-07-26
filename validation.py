@@ -152,6 +152,8 @@ def validate_availability(availability_input):
     tuple
         (is_valid: bool, availability_value: bool, display_value: str, error_message: str)
     """
+    import languages as lang  # Import here to avoid circular imports
+    
     sanitized = sanitize_input(availability_input).lower()
     
     if not sanitized:
@@ -162,9 +164,9 @@ def validate_availability(availability_input):
     negative_values = ['não', 'nao', 'n', 'no', 'indisponível', 'indisponivel', 'false', '0']
     
     if sanitized in positive_values:
-        return True, True, "Disponível", ""
+        return True, True, lang.get_string("available"), ""
     elif sanitized in negative_values:
-        return True, False, "Indisponível", ""
+        return True, False, lang.get_string("unavailable"), ""
     else:
         return False, False, "", "Digite 'sim' ou 'não' para disponibilidade."
 

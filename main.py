@@ -315,6 +315,7 @@ def cadastrar_filme():
     }
     
     print(lang.get_string("movie_registered"))
+    disponibilidade_display = lang.get_string("available") if disponibilidade_bool else lang.get_string("unavailable")
     print(f"ID: {id_filme} | Nome: {nome} | Ano: {ano} | Gênero: {genero} | Disponibilidade: {disponibilidade_display}")
     
     continuar = input(lang.get_string("press_exit"))
@@ -334,7 +335,12 @@ def listar_filmes():
         
         for filme_id in database.filmes_cadastrados:
             filme = database.filmes_cadastrados[filme_id]
-            disponibilidade_display = "Disponível" if filme["Disponibilidade"] else "Indisponível"
+            # Display availability in the current language
+            if isinstance(filme["Disponibilidade"], bool):
+                disponibilidade_display = lang.get_string("available") if filme["Disponibilidade"] else lang.get_string("unavailable")
+            else:
+                # Handle legacy string format
+                disponibilidade_display = filme["Disponibilidade"]
             
             print(f"{lang.get_string('movie_id')} {filme_id}")
             print(f"{lang.get_string('movie_name')} {filme['Nome']}")

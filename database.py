@@ -17,6 +17,7 @@ e um sub-dicionário com os detalhes do filme como valor.
 
 import os
 import json
+import languages as lang
 
 filmes_cadastrados = {}  
 """
@@ -25,9 +26,9 @@ Estrutura:
 {
     "F001": {
         "Nome": "Nome do Filme",
-        "Ano": "2023",
+        "Ano": 2023,
         "Genero": "Ação",
-        "Disponibilidade": "Sim"
+        "Disponibilidade": True
     },
     ...
 }                        
@@ -49,14 +50,40 @@ def salvar_arquivoFilmes():
     True
     """
     try:
-        #abre ou cria o arquivo, se não existir
+        # Validate data before saving
+        if not isinstance(filmes_cadastrados, dict):
+            print(lang.get_string("save_error").format("Dados inválidos"))
+            return False
+        
+        # Create backup of existing file if it exists
+        if os.path.exists("dados_filmes.json"):
+            try:
+                os.rename("dados_filmes.json", "dados_filmes.json.backup")
+            except OSError:
+                pass  # Continue even if backup fails
+        
+        # Save to file with error handling
         with open("dados_filmes.json", "w", encoding="utf-8") as arquivo: 
-            #Salva o dicionário no arquivo JSON
             json.dump(filmes_cadastrados, arquivo, indent=4, ensure_ascii=False)
-        print ("Arquivo de filmes salvo com sucesso em dados_filmes.json")
+        
+        # Remove backup file if save was successful
+        if os.path.exists("dados_filmes.json.backup"):
+            try:
+                os.remove("dados_filmes.json.backup")
+            except OSError:
+                pass  # Continue even if backup removal fails
+        
+        print(lang.get_string("file_saved"))
         return True
+        
+    except PermissionError:
+        print(lang.get_string("save_error").format("Sem permissão para escrever no arquivo"))
+        return False
+    except OSError as erro:
+        print(lang.get_string("save_error").format(f"Erro no sistema de arquivos: {erro}"))
+        return False
     except Exception as erro:
-        print (f"Erro ao salvar o arquivo de filmes: {erro}")
+        print(lang.get_string("save_error").format(str(erro)))
         return False
 
 def carregar_arquivoFilmes():
@@ -78,18 +105,60 @@ def carregar_arquivoFilmes():
     global filmes_cadastrados
     
     try:
-        #Tentar abrir o arquivo para leitura
+        # Check if file exists and is readable
+        if not os.path.exists("dados_filmes.json"):
+            print(lang.get_string("file_not_found"))
+            return False
+        
+        if not os.access("dados_filmes.json", os.R_OK):
+            print(lang.get_string("load_error").format("Sem permissão para ler o arquivo"))
+            return False
+        
+        # Try to load and validate the JSON data
         with open("dados_filmes.json", "r", encoding="utf-8") as arquivo:
-            #Carrega o dicionário do arquivo JSON
-            filmes_cadastrados = json.load(arquivo)
-        print(f"{len(filmes_cadastrados)} filmes carregados com sucesso.")
+            data = json.load(arquivo)
+        
+        # Validate loaded data structure
+        if not isinstance(data, dict):
+            print(lang.get_string("load_error").format("Formato de arquivo inválido"))
+            return False
+        
+        # Validate each movie entry
+        validated_data = {}
+        for movie_id, movie_data in data.items():
+            if isinstance(movie_data, dict) and all(key in movie_data for key in ["Nome", "Ano", "Genero", "Disponibilidade"]):
+                # Convert old string format to new format if needed
+                movie_copy = movie_data.copy()
+                
+                # Convert year to integer if it's a string
+                if isinstance(movie_copy["Ano"], str):
+                    try:
+                        movie_copy["Ano"] = int(movie_copy["Ano"])
+                    except ValueError:
+                        movie_copy["Ano"] = 2000  # Default year
+                
+                # Convert availability to boolean if it's a string
+                if isinstance(movie_copy["Disponibilidade"], str):
+                    movie_copy["Disponibilidade"] = movie_copy["Disponibilidade"].lower() in ["sim", "yes", "true", "disponível", "disponivel"]
+                
+                validated_data[movie_id] = movie_copy
+        
+        filmes_cadastrados = validated_data
+        print(lang.get_string("movies_loaded").format(len(filmes_cadastrados)))
         return True
     
     except FileNotFoundError:
-        # Se o arquivo não existir, não carrega nada
-        print("Arquivo de filmes não encontrado. Verifique se o arquivo está no mesmo diretório.")
+        print(lang.get_string("file_not_found"))
+        return False
+    
+    except PermissionError:
+        print(lang.get_string("load_error").format("Sem permissão para acessar o arquivo"))
+        return False
+    
+    except json.JSONDecodeError as erro:
+        print(lang.get_string("load_error").format(f"Arquivo JSON inválido: {erro}"))
         return False
     
     except Exception as erro:
-        print(f"Erro ao carregar o arquivo de filmes: {erro}")
+        print(lang.get_string("load_error").format(str(erro)))
         return False

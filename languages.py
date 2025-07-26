@@ -46,9 +46,10 @@ pt_BR = {
     "enter_name": "Digite o nome do filme: ",
     "enter_year": "Digite o ano do filme: ",
     "enter_genre": "Digite o gênero do filme: ",
-    "enter_availability": "Digite a disponibilidade do filme: ",
+    "enter_availability": "Digite a disponibilidade do filme (sim/não): ",
     "movie_registered": "Filme cadastrado com sucesso!",
     "no_movies": "Não há filmes cadastrados.",
+    "available_movies": "Filmes disponíveis:",
     "enter_remove_id": "Digite o ID do filme que deseja remover: ",
     "movie_removed": "Filme removido com sucesso!",
     "movie_not_found": "Filme não encontrado.",
@@ -69,7 +70,12 @@ pt_BR = {
     # Idiomas
     "language_name": "Português",
     "select_language": "Selecione o idioma:\n1 - Português\n2 - English\n",
-    "language_changed": "Idioma alterado para Português"
+    "language_changed": "Idioma alterado para Português",
+    
+    # Validação e confirmação
+    "confirm_action": "Tem certeza? (sim/não): ",
+    "cancel_operation": "Deseja cancelar a operação? (sim/não): ",
+    "max_attempts_reached": "Número máximo de tentativas atingido. Retornando ao menu."
 }
 
 # Dicionário para inglês
@@ -97,9 +103,10 @@ en_US = {
     "enter_name": "Enter the movie name: ",
     "enter_year": "Enter the movie year: ",
     "enter_genre": "Enter the movie genre: ",
-    "enter_availability": "Enter the movie availability: ",
+    "enter_availability": "Enter the movie availability (yes/no): ",
     "movie_registered": "Movie successfully registered!",
     "no_movies": "There are no registered movies.",
+    "available_movies": "Available movies:",
     "enter_remove_id": "Enter the ID of the movie you want to remove: ",
     "movie_removed": "Movie successfully removed!",
     "movie_not_found": "Movie not found.",
@@ -120,7 +127,12 @@ en_US = {
     # Languages
     "language_name": "English",
     "select_language": "Select language:\n1 - Português\n2 - English\n",
-    "language_changed": "Language changed to English"
+    "language_changed": "Language changed to English",
+    
+    # Validation and confirmation
+    "confirm_action": "Are you sure? (yes/no): ",
+    "cancel_operation": "Do you want to cancel the operation? (yes/no): ",
+    "max_attempts_reached": "Maximum number of attempts reached. Returning to menu."
 }
 
 # Idioma padrão
